@@ -15,22 +15,22 @@ jQuery(function ($) {
             var event = new $.Event(name);
             this.trigger(event, data);
 
-            return event.result !== false;
+            return event;
         },
 
         /**
          * Handles execution of remote calls firing overridable events along the way
          */
         callRemote: function () {
-            var el      = this,
-                method  = el.attr('method') || el.attr('data-method') || 'GET',
-                url     = el.attr('action') || el.attr('href'),
-                dataType  = el.attr('data-type')  || 'script';
-
-            if (url === undefined) {
-              throw "No URL specified for remote call (action or href must be present).";
-            } else {
-                if (el.triggerAndReturn('ajax:before')) {
+            var el      = this;
+            var event = el.triggerAndReturn('ajax:before'); 
+            if (event.result !== false) {
+                var method  = event.data_method || el.attr('method') || el.attr('data-method') || 'GET',
+                    url     = event.data_url || el.attr('action') || el.attr('href'),
+                    dataType  = event.data_type || el.attr('data-type')  || 'script';
+                if (url === undefined) {
+                    throw "No URL specified for remote call (action or href must be present).";
+                } else {
                     var data = el.is('form') ? el.serializeArray() : [];
                     $.ajax({
                         url: url,
@@ -50,9 +50,8 @@ jQuery(function ($) {
                             el.trigger('ajax:failure', [xhr, status, error]);
                         }
                     });
+                    el.trigger('ajax:after');
                 }
-
-                el.trigger('ajax:after');
             }
         }
     });
@@ -62,7 +61,8 @@ jQuery(function ($) {
      */
     $('a[data-confirm],input[data-confirm]').live('click', function () {
         var el = $(this);
-        if (el.triggerAndReturn('confirm')) {
+        var event = el.triggerAndReturn('confirm'); 
+        if (event.result !== false) {
             if (!confirm(el.attr('data-confirm'))) {
                 return false;
             }
