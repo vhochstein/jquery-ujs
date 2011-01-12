@@ -27,7 +27,7 @@ jQuery(function ($) {
             if (event.result !== false) {
                 var method  = event.data_method || el.attr('method') || el.attr('data-method') || 'GET',
                     url     = event.data_url || el.attr('action') || el.attr('href'),
-                    dataType  = event.data_type || el.attr('data-type')  || 'script';
+                    dataType  = event.data_type || el.attr('data-type')  || ($.ajaxSettings && $.ajaxSettings.dataType);
                 if (url === undefined) {
                     throw "No URL specified for remote call (action or href must be present).";
                 } else {
@@ -37,7 +37,10 @@ jQuery(function ($) {
                         data: data,
                         dataType: dataType,
                         type: method.toUpperCase(),
-                        beforeSend: function (xhr) {
+                        beforeSend: function (xhr, settings) {
+                            if (settings.dataType === undefined || settings.dataType === 'rails') {
+                              xhr.setRequestHeader('accept', '*/*;q=0.5, ' + settings.accepts.script);
+                            }
                             el.trigger('ajax:loading', xhr);
                         },
                         success: function (data, status, xhr) {
